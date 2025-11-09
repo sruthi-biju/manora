@@ -120,10 +120,15 @@ Guidelines:
     }
 
     const aiData = await aiResponse.json();
-    const extractedData = JSON.parse(
-      aiData.choices[0].message.content
-    );
-
+    
+    // Clean the response content - remove markdown code blocks if present
+    let content = aiData.choices[0].message.content;
+    console.log("Raw AI response:", content);
+    
+    // Remove markdown code block markers if present
+    content = content.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim();
+    
+    const extractedData = JSON.parse(content);
     console.log("Extracted data:", extractedData);
 
     // Initialize Supabase client
