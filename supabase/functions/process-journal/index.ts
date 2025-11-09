@@ -32,7 +32,23 @@ Deno.serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Get current date and time for context
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0];
+    const currentTime = now.toTimeString().split(' ')[0].substring(0, 5);
+    const currentDateTime = now.toLocaleString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
     const systemPrompt = `You are a smart journal assistant that analyzes daily journal entries and extracts actionable information.
+
+IMPORTANT: Today's current date and time is ${currentDateTime} (${currentDate} at ${currentTime}).
+Use this as the reference point for all relative dates and times mentioned in the journal entry.
 
 Extract the following from the journal entry:
 1. Tasks/To-dos (things to do, goals, intentions)
@@ -50,11 +66,11 @@ Return the data in JSON format with these exact keys:
 
 Guidelines:
 - For tasks: Extract action items, todos, goals. Set priority based on urgency/importance.
-- For events: Only include if there's a specific date/time mention. Format dates as YYYY-MM-DD.
+- For events: ALWAYS include date and time when mentioned. Convert relative dates (today, tomorrow, next week) to actual dates based on current date: ${currentDate}. If time is mentioned, include it. If not mentioned but it's an event, use the current time: ${currentTime} as default.
 - For notes: Extract key insights, reflections, or important information worth remembering.
 - For health: Extract mentions of physical/mental health, exercise, diet, sleep, mood.
 - If a category has no items, return an empty array.
-- Be smart about interpreting context (e.g., "tomorrow" should be actual date).`;
+- Be smart about interpreting context (e.g., "tomorrow" = ${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}).`;
 
     const aiResponse = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
