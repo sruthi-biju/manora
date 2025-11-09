@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Auth } from "@/components/Auth";
 import { JournalInput } from "@/components/JournalInput";
 import { InsightsDisplay } from "@/components/InsightsDisplay";
-import { JournalHistory } from "@/components/JournalHistory";
+import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut, BookOpen } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -51,7 +51,7 @@ const Index = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <JournalHistory refreshTrigger={refreshTrigger} />
+        <AppSidebar />
         
         <div className="flex-1 flex flex-col">
           <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
