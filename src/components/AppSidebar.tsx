@@ -6,10 +6,11 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { BookOpen, CheckSquare, Calendar, FileText, Heart } from "lucide-react";
+import { BookOpen, CheckSquare, Calendar, FileText, Heart, User } from "lucide-react";
 
 const navigationItems = [
   { 
@@ -67,6 +68,23 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink 
+                to="/profile" 
+                className="hover:bg-accent hover:text-accent-foreground"
+                activeClassName="bg-accent text-accent-foreground font-medium"
+              >
+                <User className="h-5 w-5 shrink-0" />
+                {!isCollapsed && <span>Profile</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

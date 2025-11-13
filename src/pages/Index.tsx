@@ -56,8 +56,8 @@ const Index = () => {
         <div className="flex-1 flex flex-col">
           <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger />
+              <SidebarTrigger />
+              <div className="flex items-center gap-3 absolute left-1/2 transform -translate-x-1/2">
                 <BookOpen className="w-6 h-6 text-primary" />
                 <h1 className="text-2xl font-bold bg-[var(--gradient-hero)] bg-clip-text text-transparent">
                   Memora
@@ -71,6 +71,11 @@ const Index = () => {
           </header>
 
           <main className="container mx-auto px-4 py-8 space-y-8 flex-1">
+            <div className="text-center mb-8">
+              <h2 className="text-xl font-medium text-muted-foreground">
+                Welcome {user?.user_metadata?.email?.split('@')[0] || 'back'}
+              </h2>
+            </div>
             <JournalInput onProcessed={handleProcessed} />
             <InsightsDisplay refreshTrigger={refreshTrigger} />
           </main>

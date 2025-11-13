@@ -10,6 +10,7 @@ import Tasks from "./pages/Tasks";
 import CalendarPage from "./pages/CalendarPage";
 import NotesInsights from "./pages/NotesInsights";
 import HealthWellness from "./pages/HealthWellness";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/notes" element={<NotesInsights />} />
           <Route path="/health" element={<HealthWellness />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
