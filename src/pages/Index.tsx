@@ -7,49 +7,43 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut, BookOpen } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-
 const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({
+      data: {
+        session
+      }
+    }) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
-
     const {
-      data: { subscription },
+      data: {
+        subscription
+      }
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => subscription.unsubscribe();
   }, []);
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
   };
-
   const handleProcessed = () => {
-    setRefreshTrigger((prev) => prev + 1);
+    setRefreshTrigger(prev => prev + 1);
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg text-muted-foreground">Loading...</div>
-      </div>
-    );
+      </div>;
   }
-
   if (!user) {
     return <Auth />;
   }
-
-  return (
-    <SidebarProvider>
+  return <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
         
@@ -72,7 +66,7 @@ const Index = () => {
 
           <main className="container mx-auto px-4 py-8 space-y-8 flex-1">
             <div className="text-center mb-8">
-              <h2 className="text-xl font-medium text-muted-foreground">
+              <h2 className="text-muted-foreground font-medium text-left text-2xl">
                 Welcome {user?.user_metadata?.email?.split('@')[0] || 'back'}
               </h2>
             </div>
@@ -81,8 +75,6 @@ const Index = () => {
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 };
-
 export default Index;
