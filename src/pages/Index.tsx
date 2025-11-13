@@ -65,7 +65,7 @@ const Index = () => {
           <main className="container mx-auto px-4 py-8 space-y-8 flex-1">
             <div className="text-center mb-8">
               <h2 className="text-muted-foreground font-medium text-left text-2xl px-[22px]">
-                Welcome {user?.user_metadata?.email?.split('@')[0] || 'back'}
+                Welcome {user?.user_metadata?.full_name?.split(' ')[0] || user?.user_metadata?.email?.split('@')[0] || 'back'}
               </h2>
             </div>
             <JournalInput onProcessed={handleProcessed} />

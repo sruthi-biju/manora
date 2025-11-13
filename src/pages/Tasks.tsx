@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, LogOut, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Task {
   id: string;
@@ -21,6 +24,8 @@ interface Task {
 export default function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newTask, setNewTask] = useState({ title: "", priority: "medium" });
+  const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -76,6 +81,48 @@ export default function Tasks() {
     }
   };
 
+  const addTask = async () => {
+    if (!newTask.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Task title cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("tasks")
+        .insert({
+          title: newTask.title,
+          priority: newTask.priority,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Task added successfully",
+      });
+
+      setNewTask({ title: "", priority: "medium" });
+      setIsAdding(false);
+      fetchTasks();
+    } catch (error) {
+      console.error("Error adding task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add task",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getPriorityColor = (priority: string | null) => {
     switch (priority?.toLowerCase()) {
       case "high":
@@ -116,7 +163,50 @@ export default function Tasks() {
           </header>
 
           <main className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6">Tasks</h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-3xl font-bold">Tasks</h1>
+              <Button onClick={() => setIsAdding(!isAdding)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Task
+              </Button>
+            </div>
+
+            {isAdding && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Add New Task</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="task-title">Title</Label>
+                    <Input
+                      id="task-title"
+                      value={newTask.title}
+                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                      placeholder="Enter task title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="task-priority">Priority</Label>
+                    <Select value={newTask.priority} onValueChange={(value) => setNewTask({ ...newTask, priority: value })}>
+                      <SelectTrigger id="task-priority">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={addTask}>Add</Button>
+                    <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
         <CardHeader>
           <CardTitle>Your Tasks</CardTitle>

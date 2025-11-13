@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowLeft, LogOut } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { FileText, ArrowLeft, LogOut, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +19,8 @@ interface Note {
 export default function NotesInsights() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newNote, setNewNote] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -50,6 +54,47 @@ export default function NotesInsights() {
     }
   };
 
+  const addNote = async () => {
+    if (!newNote.trim()) {
+      toast({
+        title: "Error",
+        description: "Note content cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("notes")
+        .insert({
+          content: newNote,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Note added successfully",
+      });
+
+      setNewNote("");
+      setIsAdding(false);
+      fetchNotes();
+    } catch (error) {
+      console.error("Error adding note:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add note",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-muted-foreground">Loading...</div>;
   }
@@ -77,7 +122,38 @@ export default function NotesInsights() {
           </header>
 
           <main className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6">Notes & Insights</h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-3xl font-bold">Notes & Insights</h1>
+              <Button onClick={() => setIsAdding(!isAdding)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Note
+              </Button>
+            </div>
+
+            {isAdding && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Add New Note</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="note-content">Content</Label>
+                    <Textarea
+                      id="note-content"
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Enter note content"
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={addNote}>Add</Button>
+                    <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

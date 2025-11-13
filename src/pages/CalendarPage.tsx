@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, ArrowLeft, LogOut } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar as CalendarIcon, ArrowLeft, LogOut, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -20,6 +22,8 @@ interface CalendarEvent {
 export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newEvent, setNewEvent] = useState({ title: "", event_date: "", event_time: "" });
+  const [isAdding, setIsAdding] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -53,6 +57,49 @@ export default function CalendarPage() {
     }
   };
 
+  const addEvent = async () => {
+    if (!newEvent.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Event title cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("calendar_events")
+        .insert({
+          title: newEvent.title,
+          event_date: newEvent.event_date || null,
+          event_time: newEvent.event_time || null,
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Event added successfully",
+      });
+
+      setNewEvent({ title: "", event_date: "", event_time: "" });
+      setIsAdding(false);
+      fetchEvents();
+    } catch (error) {
+      console.error("Error adding event:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add event",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-muted-foreground">Loading...</div>;
   }
@@ -80,7 +127,55 @@ export default function CalendarPage() {
           </header>
 
           <main className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6">Calendar Events</h1>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-3xl font-bold">Calendar Events</h1>
+              <Button onClick={() => setIsAdding(!isAdding)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Event
+              </Button>
+            </div>
+
+            {isAdding && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Add New Event</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="event-title">Title</Label>
+                    <Input
+                      id="event-title"
+                      value={newEvent.title}
+                      onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                      placeholder="Enter event title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="event-date">Date</Label>
+                    <Input
+                      id="event-date"
+                      type="date"
+                      value={newEvent.event_date}
+                      onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="event-time">Time</Label>
+                    <Input
+                      id="event-time"
+                      type="time"
+                      value={newEvent.event_time}
+                      onChange={(e) => setNewEvent({ ...newEvent, event_time: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={addEvent}>Add</Button>
+                    <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

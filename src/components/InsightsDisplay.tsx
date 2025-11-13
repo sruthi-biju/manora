@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckSquare, Calendar, FileText, Heart, MoreVertical, ChevronUp, ChevronDown, Edit, Trash } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -185,7 +186,7 @@ export const InsightsDisplay = ({ refreshTrigger }: InsightsDisplayProps) => {
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
-              {tasks.map((task: any) => (
+              {tasks.slice(0, 2).map((task: any) => (
                 <li key={task.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                   <Checkbox
                     checked={task.completed}
@@ -227,6 +228,13 @@ export const InsightsDisplay = ({ refreshTrigger }: InsightsDisplayProps) => {
                 </li>
               ))}
             </ul>
+            {tasks.length > 2 && (
+              <Link to="/tasks">
+                <Button variant="link" className="w-full mt-3">
+                  See more ({tasks.length - 2} more)
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       )}
@@ -242,7 +250,7 @@ export const InsightsDisplay = ({ refreshTrigger }: InsightsDisplayProps) => {
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
-              {events.map((event: any) => (
+              {events.slice(0, 2).map((event: any) => (
                 <li key={event.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                   <Calendar className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
@@ -282,6 +290,13 @@ export const InsightsDisplay = ({ refreshTrigger }: InsightsDisplayProps) => {
                 </li>
               ))}
             </ul>
+            {events.length > 2 && (
+              <Link to="/calendar">
+                <Button variant="link" className="w-full mt-3">
+                  See more ({events.length - 2} more)
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       )}
@@ -297,7 +312,7 @@ export const InsightsDisplay = ({ refreshTrigger }: InsightsDisplayProps) => {
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
-              {notes.map((note: any) => (
+              {notes.slice(0, 2).map((note: any) => (
                 <li key={note.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                   <FileText className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <span className="flex-1">{note.content}</span>
@@ -329,6 +344,13 @@ export const InsightsDisplay = ({ refreshTrigger }: InsightsDisplayProps) => {
                 </li>
               ))}
             </ul>
+            {notes.length > 2 && (
+              <Link to="/notes-insights">
+                <Button variant="link" className="w-full mt-3">
+                  See more ({notes.length - 2} more)
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       )}
@@ -344,7 +366,7 @@ export const InsightsDisplay = ({ refreshTrigger }: InsightsDisplayProps) => {
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
-              {health.map((item: any) => (
+              {health.slice(0, 2).map((item: any) => (
                 <li key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                   <Heart className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <span className="flex-1">{item.content}</span>
@@ -376,6 +398,13 @@ export const InsightsDisplay = ({ refreshTrigger }: InsightsDisplayProps) => {
                 </li>
               ))}
             </ul>
+            {health.length > 2 && (
+              <Link to="/health-wellness">
+                <Button variant="link" className="w-full mt-3">
+                  See more ({health.length - 2} more)
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
       )}
