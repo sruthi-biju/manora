@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,76 +14,86 @@ export const JournalInput = ({ onProcessed }: JournalInputProps) => {
   const [content, setContent] = useState("");
   const [processing, setProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+  useEffect(() => {
+    // Initialize Speech Recognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'en-US';
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+      recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        if (finalTranscript) {
+          setContent(prev => prev ? `${prev} ${finalTranscript}` : finalTranscript);
         }
       };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await transcribeAudio(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsRecording(false);
+        
+        if (event.error === 'not-allowed') {
+          toast.error("Microphone access denied. Please allow microphone permissions.");
+        } else if (event.error === 'no-speech') {
+          toast.error("No speech detected. Please try again.");
+        } else {
+          toast.error("Speech recognition failed. Please try again.");
+        }
       };
 
-      mediaRecorder.start();
+      recognitionRef.current.onend = () => {
+        if (isRecording) {
+          setIsRecording(false);
+          toast.success("Recording stopped");
+        }
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const startRecording = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      toast.error("Speech recognition is not supported in your browser. Please use Chrome or Edge.");
+      return;
+    }
+
+    try {
+      recognitionRef.current.start();
       setIsRecording(true);
-      toast.success("Recording started");
+      toast.success("Recording started - speak now!");
     } catch (error) {
       console.error("Error starting recording:", error);
-      toast.error("Failed to start recording. Please check microphone permissions.");
+      toast.error("Failed to start recording. Please try again.");
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
       setIsRecording(false);
-    }
-  };
-
-  const transcribeAudio = async (audioBlob: Blob) => {
-    setIsTranscribing(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-
-        const { data, error } = await supabase.functions.invoke("transcribe-audio", {
-          body: { audio: base64Audio },
-        });
-
-        if (error) {
-          const errorMsg = error.message || '';
-          if (errorMsg.includes('quota') || errorMsg.includes('insufficient_quota')) {
-            throw new Error('OpenAI quota exceeded. Please add credits to your OpenAI account.');
-          }
-          throw error;
-        }
-
-        if (data?.text) {
-          setContent(prev => prev ? `${prev}\n\n${data.text}` : data.text);
-          toast.success("Transcription complete!");
-        }
-      };
-    } catch (error: any) {
-      console.error("Error transcribing audio:", error);
-      toast.error(error.message || "Failed to transcribe audio");
-    } finally {
-      setIsTranscribing(false);
     }
   };
 
@@ -149,7 +159,7 @@ export const JournalInput = ({ onProcessed }: JournalInputProps) => {
               type="button"
               variant="outline"
               onClick={isRecording ? stopRecording : startRecording}
-              disabled={isTranscribing || processing}
+              disabled={processing}
               className="flex-shrink-0"
             >
               {isRecording ? (
@@ -160,13 +170,13 @@ export const JournalInput = ({ onProcessed }: JournalInputProps) => {
               ) : (
                 <>
                   <Mic className="w-4 h-4 mr-2" />
-                  {isTranscribing ? "Transcribing..." : "Record"}
+                  Record
                 </>
               )}
             </Button>
             <Button
               type="submit"
-              disabled={processing || isRecording || isTranscribing}
+              disabled={processing || isRecording}
               className="flex-1"
             >
               {processing ? "Processing..." : "Process Journal Entry"}
