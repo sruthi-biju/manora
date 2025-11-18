@@ -26,7 +26,11 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newEvent, setNewEvent] = useState({ title: "", event_date: "", event_time: "" });
+  const [newEvent, setNewEvent] = useState({ 
+    title: "", 
+    event_date: new Date().toISOString().split('T')[0], // Default to today
+    event_time: "" 
+  });
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
@@ -64,8 +68,9 @@ export default function CalendarPage() {
 
   const connectGoogleCalendar = async () => {
     toast({
-      title: "Coming Soon",
-      description: "Google Calendar integration requires additional OAuth setup. Please add your Google Client ID and Secret to enable this feature.",
+      title: "Setup Required",
+      description: "To connect Google Calendar, you need to configure OAuth credentials. This requires setting up a Google Cloud project and adding the credentials.",
+      duration: 5000,
     });
   };
 
@@ -177,7 +182,11 @@ export default function CalendarPage() {
           : "Event added successfully",
       });
 
-      setNewEvent({ title: "", event_date: "", event_time: "" });
+      setNewEvent({ 
+        title: "", 
+        event_date: new Date().toISOString().split('T')[0], 
+        event_time: "" 
+      });
       setIsAdding(false);
       fetchEvents();
     } catch (error) {
@@ -266,11 +275,12 @@ export default function CalendarPage() {
                       type="date"
                       value={newEvent.event_date}
                       onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })}
+                      min={new Date().toISOString().split('T')[0]}
                       className="border-primary/30"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="event-time">Time</Label>
+                    <Label htmlFor="event-time">Time (optional)</Label>
                     <Input
                       id="event-time"
                       type="time"
@@ -279,6 +289,21 @@ export default function CalendarPage() {
                       className="border-primary/30"
                     />
                   </div>
+                  {!isGoogleConnected && (
+                    <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        🔗 Want to sync with Google Calendar? You'll need to set up OAuth credentials first.
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={connectGoogleCalendar}
+                        className="w-full"
+                        size="sm"
+                      >
+                        Learn How to Connect
+                      </Button>
+                    </div>
+                  )}
                   {isGoogleConnected && (
                     <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
                       <Label htmlFor="sync-google" className="cursor-pointer">
@@ -290,15 +315,6 @@ export default function CalendarPage() {
                         onCheckedChange={setSyncEnabled}
                       />
                     </div>
-                  )}
-                  {!isGoogleConnected && (
-                    <Button
-                      variant="outline"
-                      onClick={connectGoogleCalendar}
-                      className="w-full"
-                    >
-                      Connect Google Calendar
-                    </Button>
                   )}
                   <div className="flex gap-2">
                     <Button onClick={addEvent} className="bg-primary hover:bg-primary/90">Add</Button>
